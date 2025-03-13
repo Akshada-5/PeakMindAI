@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blink Detection System</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f2f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #1a73e8;
+            margin: 0;
+        }
+        .content {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #1a73e8;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #1557b0;
+        }
+        .video-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #video_feed {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .stats {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        .stress-normal {
+            color: #28a745;
+        }
+        .stress-moderate {
+            color: #ffc107;
+        }
+        .stress-high {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Blink Detection System</h1>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <p>Welcome to the Blink Detection System. This application helps monitor your blink rate and stress levels in real-time.</p>
+            <a href="{{ url_for('video_feed') }}" class="btn">Start Detection</a>
+            
+            <div class="video-container">
+                <img id="video_feed" src="{{ url_for('video_feed') }}" alt="Video Feed">
+            </div>
+            
+            <div class="stats">
+                <h2>Statistics</h2>
+                <p>Total Blinks: <span id="blink-count">0</span></p>
+                <p>Blink Rate: <span id="blink-rate">0</span> blinks/minute</p>
+                <p>Stress Level: <span id="stress-level">Normal</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="stress-alert" class="alert"></div>
+
+    <script>
+        function updateStats() {
+            fetch('/get_stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('blink-count').textContent = data.blink_count;
+                    document.getElementById('blink-rate').textContent = data.blink_rate;
+                    
+                    const stressLevel = document.getElementById('stress-level');
+                    stressLevel.textContent = data.stress_level;
+                    
+                    // Update stress level color
+                    stressLevel.className = '';
+                    if (data.stress_level === 'High') {
+                        stressLevel.classList.add('stress-high');
+                        showAlert('High stress detected! Consider taking a break.', '#dc3545');
+                    } else if (data.stress_level === 'Moderate') {
+                        stressLevel.classList.add('stress-moderate');
+                        showAlert('Moderate stress detected. Try some deep breathing.', '#ffc107');
+                    } else {
+                        stressLevel.classList.add('stress-normal');
+                        hideAlert();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function showAlert(message, color) {
+            const alert = document.getElementById('stress-alert');
+            alert.textContent = message;
+            alert.style.backgroundColor = color;
+            alert.style.display = 'block';
+        }
+
+        function hideAlert() {
+            const alert = document.getElementById('stress-alert');
+            alert.style.display = 'none';
+        }
+
+        // Update stats every second
+        setInterval(updateStats, 1000);
+    </script>
+</body>
+</html> 
